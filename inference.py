@@ -30,8 +30,8 @@ load_dotenv()
 # Configuration
 # ──────────────────────────────────────────────────────────────────────────────
 
-API_BASE_URL = os.environ["API_BASE_URL"]
-MODEL_NAME = os.environ["MODEL_NAME"]
+API_BASE_URL = os.environ.get("API_BASE_URL", "https://router.huggingface.co/v1")
+MODEL_NAME = os.environ.get("MODEL_NAME", "moonshotai/Kimi-K2-Instruct-0905")
 PM_ENV_URL = os.environ.get("PM_ENV_URL", "http://localhost:7860")
 
 MAX_STEPS = 5  # safety cap per episode
