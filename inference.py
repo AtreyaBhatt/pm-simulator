@@ -22,6 +22,9 @@ import json
 import argparse
 import requests
 from openai import OpenAI
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Configuration
@@ -29,13 +32,15 @@ from openai import OpenAI
 
 API_BASE_URL = os.environ.get("API_BASE_URL", "https://router.huggingface.co/v1")
 MODEL_NAME = os.environ.get("MODEL_NAME", "meta-llama/Llama-3.3-70B-Instruct")
-HF_TOKEN = os.environ.get("HF_TOKEN", "")
+HF_TOKEN = os.environ.get("HF_TOKEN", "placeholder")
 PM_ENV_URL = os.environ.get("PM_ENV_URL", "http://localhost:7860")
+
+print("Using token: " + HF_TOKEN[:11])
 
 MAX_STEPS = 5  # safety cap per episode
 TEMPERATURE = 0.2
 
-client = OpenAI(base_url=API_BASE_URL, api_key=HF_TOKEN or "placeholder")
+client = OpenAI(base_url=API_BASE_URL, api_key=HF_TOKEN)
 
 # ──────────────────────────────────────────────────────────────────────────────
 # System prompt
