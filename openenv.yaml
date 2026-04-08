@@ -1,127 +1,48 @@
 name: pm-simulator
 version: "1.0.0"
 description: >
-  Product Manager decision-making environment. Simulates real-world PM tasks:
-  bug triage, sprint planning under capacity constraints, and multi-sprint
-  stakeholder management with compounding metric effects. Designed to train and
-  evaluate AI agents on prioritisation, trade-off reasoning, and strategic planning.
+  A Product Manager simulation environment where an AI agent triages bugs,
+  plans sprints, and builds quarterly roadmaps for a fictional B2B SaaS company.
+  Models real-world PM decision-making under capacity constraints, stakeholder
+  conflicts, and dependency ordering.
 
-author: "PM Simulator Team"
-license: "MIT"
+author: "PM Simulator"
+license: MIT
 
 tags:
   - product-management
-  - prioritisation
+  - planning
   - decision-making
   - business
-  - planning
-  - multi-turn
+  - real-world
 
 tasks:
-  - id: task_1
-    name: "Bug Triage"
+  - id: task1_bug_triage
+    name: "Bug Triage Sprint"
     difficulty: easy
-    max_turns: 1
+    max_steps: 20
     description: >
-      Rank 8 incoming production bugs from most to least urgent.
-      Graded by Kendall's τ correlation (70%) and top-3 accuracy (30%)
-      against the optimal severity × impact ranking.
+      Assign P0-P3 priorities to 10 incoming bug reports. Graded on accuracy
+      vs deterministic ground truth derived from severity x impact formula.
     expected_score_range: [0.50, 1.0]
 
-  - id: task_2
-    name: "Sprint Planning"
+  - id: task2_sprint_planning
+    name: "Sprint 14 Planning"
     difficulty: medium
-    max_turns: 1
+    max_steps: 35
     description: >
-      Select backlog items for a 40-story-point sprint from 15 candidates
-      to maximise business value. Graded by value ratio vs. optimal knapsack (65%),
-      capacity utilisation (20%), and item-type diversity (15%).
-      Over-capacity selections score 0.
+      Select items from a 13-item backlog to fill a 34-point sprint. Must include
+      all P0 bugs, stay within capacity, and maximise total value delivered.
     expected_score_range: [0.40, 0.90]
 
-  - id: task_3
-    name: "Stakeholder Gauntlet"
+  - id: task3_quarterly_roadmap
+    name: "Q3 Roadmap - Stakeholder Alignment"
     difficulty: hard
-    max_turns: 3
+    max_steps: 60
     description: >
-      Manage 3 consecutive sprints under competing stakeholder demands (CEO, users,
-      engineering). Product metrics (user satisfaction, revenue health, tech-debt score,
-      team velocity) decay each sprint any stakeholder group is neglected.
-      Graded by average metric health (35%), value delivered (35%),
-      and resilience — no metric below 50 at episode end (30%).
+      Build a 3-sprint quarterly roadmap from 18 items with conflicting stakeholder
+      priorities, dependency constraints, and multi-OKR coverage requirements.
     expected_score_range: [0.25, 0.75]
-
-observation_space:
-  type: object
-  description: >
-    JSON object containing task context, full backlog with item metadata,
-    sprint capacity, current product metrics, stakeholder messages, turn info,
-    and valid action types.
-  fields:
-    task_id: string
-    task_name: string
-    task_description: string
-    context: string
-    backlog:
-      type: array
-      items:
-        id: string
-        title: string
-        description: string
-        type: enum [bug, feature, tech_debt]
-        severity: integer [1-5]
-        effort: integer [1-13]
-        business_value: integer [1-10]
-        user_impact: integer [1-10]
-        stakeholder: string
-        tags: array[string]
-    sprint_capacity: integer
-    sprint_capacity_used: integer
-    sprint_items_selected: array[string]
-    product_metrics:
-      user_satisfaction: float [0-100]
-      revenue_health: float [0-100]
-      tech_debt_score: float [0-100]
-      team_velocity: float [0-100]
-    stakeholder_messages: array[object]
-    current_sprint: integer
-    total_sprints: integer
-    turn: integer
-    max_turns: integer
-    valid_actions: array[string]
-
-action_space:
-  type: object
-  description: >
-    JSON object with an action_type and the corresponding payload.
-  variants:
-    rank_items:
-      action_type: "rank_items"
-      ranked_ids: "array[string] — all bug IDs ordered most-urgent-first"
-      reasoning: "string (optional)"
-    plan_sprint:
-      action_type: "plan_sprint"
-      selected_ids: "array[string] — item IDs to include in sprint"
-      reasoning: "string (optional)"
-    finalize_sprint:
-      action_type: "finalize_sprint"
-      selected_ids: "array[string] — item IDs to deliver this sprint"
-      reasoning: "string (optional)"
-
-reward:
-  type: float
-  range: [0.0, 1.0]
-  description: >
-    Scalar reward between 0.0 and 1.0.
-    For tasks 1 and 2: single reward at episode end.
-    For task 3: intermediate health reward after each sprint, final composite score at end.
-
-environment:
-  stateful: true
-  deterministic: true
-  multi_turn: true
-  max_turns_per_task: 3
-  real_world_domain: "B2B SaaS product management"
 
 endpoints:
   reset: "POST /reset"
@@ -129,3 +50,60 @@ endpoints:
   state: "GET /state"
   tasks: "GET /tasks"
   health: "GET /health"
+
+action_space:
+  type: object
+  description: >
+    JSON object with action_type and optional fields depending on type.
+  fields:
+    action_type:
+      type: string
+      enum: [prioritize, schedule, defer, request_info, submit]
+    item_id:
+      type: string
+      description: "Target product item ID (e.g. BUG-001, FEAT-103)"
+      required_for: [prioritize, schedule, defer, request_info]
+    priority:
+      type: string
+      enum: [P0, P1, P2, P3]
+      required_for: [prioritize]
+    sprint:
+      type: integer
+      enum: [1, 2, 3]
+      required_for: [schedule]
+    reason:
+      type: string
+      description: "Rationale for deferral or prioritization"
+    thought:
+      type: string
+      description: "Agent chain-of-thought reasoning (not graded)"
+
+observation_space:
+  type: object
+  fields:
+    task_id: string
+    task_name: string
+    task_description: string
+    items: array[ProductItem]
+    sprint_capacity: integer
+    current_sprint_load: integer
+    metrics: TeamMetrics
+    step_number: integer
+    max_steps: integer
+    context: object
+    message: string
+    available_actions: array[string]
+
+reward:
+  type: float
+  range: [-1.0, 1.0]
+  description: >
+    Dense per-step rewards. Correct triage: +0.15, wrong: -0.15 to -0.35.
+    Valid schedule: +0.04-0.09, capacity violation: -0.15, P0 defer: -0.20.
+    Submit triggers final grader, adds bonus up to +0.5.
+
+environment:
+  stateful: true
+  deterministic: true
+  multi_turn: true
+  real_world_domain: "B2B SaaS product management"
