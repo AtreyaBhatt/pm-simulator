@@ -27,7 +27,7 @@ from openai import OpenAI
 # Configuration
 # ──────────────────────────────────────────────────────────────────────────────
 
-API_BASE_URL = os.environ.get("API_BASE_URL", "https://api-inference.huggingface.co/v1")
+API_BASE_URL = os.environ.get("API_BASE_URL", "https://router.huggingface.co/v1")
 MODEL_NAME = os.environ.get("MODEL_NAME", "meta-llama/Llama-3.3-70B-Instruct")
 HF_TOKEN = os.environ.get("HF_TOKEN", "")
 PM_ENV_URL = os.environ.get("PM_ENV_URL", "http://localhost:7860")
@@ -71,7 +71,7 @@ carefully and respond with a valid JSON action.
 
 ## PM decision principles
 
-1. **For bug triage**: Prioritise by (severity × impact) — fix critical/high-impact bugs first.
+1. **For bug triage**: Prioritise by (severity * impact) — fix critical/high-impact bugs first.
    Consider: payment failures > security issues > data loss > performance > UX polish.
 
 2. **For sprint planning**: Maximise delivered value within the story point cap.
@@ -243,7 +243,7 @@ def run_task(task_id: str) -> float:
 
     while step_count < MAX_STEPS:
         step_count += 1
-        valid_actions = observation.get("valid_actions", [])
+        valid_actions = observation.get("available_actions", [])
 
         if not valid_actions:
             print("  No valid actions — episode may be complete.")
@@ -291,7 +291,7 @@ def run_task(task_id: str) -> float:
 
 def main():
     parser = argparse.ArgumentParser(description="PM Simulator baseline inference")
-    parser.add_argument("--task", type=str, default=None, help="Run a single task (task_1/task_2/task_3)")
+    parser.add_argument("--task", type=str, default=None, help="Run a single task (task1_bug_triage/task2_sprint_planning/task3_quarterly_roadmap)")
     parser.add_argument("--env-url", type=str, default=None, help="Override PM_ENV_URL")
     args = parser.parse_args()
 
@@ -315,7 +315,7 @@ def main():
 
     print("  Environment: ✓ reachable\n")
 
-    tasks = ["task_1", "task_2", "task_3"] if not args.task else [args.task]
+    tasks = ["task1_bug_triage", "task2_sprint_planning", "task3_quarterly_roadmap"] if not args.task else [args.task]
     scores = {}
 
     for task_id in tasks:
@@ -326,7 +326,7 @@ def main():
     print(f"\n{'='*60}")
     print("  BASELINE SCORES")
     print(f"{'='*60}")
-    task_names = {"task_1": "Bug Triage (Easy)", "task_2": "Sprint Planning (Medium)", "task_3": "Stakeholder Gauntlet (Hard)"}
+    task_names = {"task1_bug_triage": "Bug Triage (Easy)", "task2_sprint_planning": "Sprint Planning (Medium)", "task3_quarterly_roadmap": "Stakeholder Gauntlet (Hard)"}
     for task_id, score in scores.items():
         bar = "█" * int(score * 20) + "░" * (20 - int(score * 20))
         print(f"  {task_names.get(task_id, task_id):35s}  [{bar}]  {score:.4f}")

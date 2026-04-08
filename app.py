@@ -99,9 +99,11 @@ def health():
 
 @app.post("/reset", response_model=Observation)
 def reset(request: ResetRequest):
+    print("nigga")
     try:
         return _env.reset(request.task_id)
     except ValueError as e:
+        print(e)
         raise HTTPException(status_code=400, detail=str(e))
 
 
