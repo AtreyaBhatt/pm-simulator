@@ -97,13 +97,12 @@ def health():
     )
 
 
-@app.post("/reset", response_model=Observation)
-def reset(request: ResetRequest):
-    print("nigga")
+app.post("/reset", response_model=Observation)
+def reset(request: Optional[ResetRequest] = Body(default=None)):
     try:
-        return _env.reset(request.task_id)
+        task_id = (request.task_id if request else None) or "task1_bug_triage"
+        return _env.reset(task_id)
     except ValueError as e:
-        print(e)
         raise HTTPException(status_code=400, detail=str(e))
 
 
