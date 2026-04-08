@@ -4,9 +4,9 @@ PM Simulator — Baseline Inference Script
 Runs an LLM agent against all 3 tasks and reports baseline scores.
 
 Required environment variables:
-  API_BASE_URL  — OpenAI-compatible API base URL
-  MODEL_NAME    — Model identifier for inference
-  HF_TOKEN      — Hugging Face / API token (used as the API key)
+  API_BASE_URL       — OpenAI-compatible API base URL
+  MODEL_NAME         — Model identifier for inference
+  OPENROUTER_API_KEY — Hugging Face / API token (used as the API key)
 
 Optional:
   PM_ENV_URL    — URL of the running PM Simulator API (default: http://localhost:7860)
@@ -30,17 +30,14 @@ load_dotenv()
 # Configuration
 # ──────────────────────────────────────────────────────────────────────────────
 
-API_BASE_URL = os.environ.get("API_BASE_URL", "https://router.huggingface.co/v1")
-MODEL_NAME = os.environ.get("MODEL_NAME", "meta-llama/Llama-3.3-70B-Instruct")
-HF_TOKEN = os.environ.get("HF_TOKEN", "placeholder")
+API_BASE_URL = os.environ["API_BASE_URL"]
+MODEL_NAME = os.environ["MODEL_NAME"]
 PM_ENV_URL = os.environ.get("PM_ENV_URL", "http://localhost:7860")
-
-print("Using token: " + HF_TOKEN[:11])
 
 MAX_STEPS = 5  # safety cap per episode
 TEMPERATURE = 0.2
 
-client = OpenAI(base_url=API_BASE_URL, api_key=HF_TOKEN)
+client = OpenAI(base_url=API_BASE_URL, api_key=os.environ["OPENROUTER_API_KEY"])
 
 # ──────────────────────────────────────────────────────────────────────────────
 # System prompt
@@ -309,8 +306,8 @@ def main():
     print(f"  Model:     {MODEL_NAME}")
     print(f"  Env URL:   {PM_ENV_URL}")
 
-    if not HF_TOKEN:
-        print("  [WARNING] HF_TOKEN not set. API calls may fail.")
+    if not os.environ['OPENROUTER_API_KEY']:
+        print("  [WARNING] API TOKEN not set. API calls may fail.")
 
     # Check environment is up
     if not env_health():
@@ -318,7 +315,7 @@ def main():
         print("  Start with: uvicorn app:app --host 0.0.0.0 --port 7860")
         sys.exit(1)
 
-    print("  Environment: ✓ reachable\n")
+    print("  Environment: reachable\n")
 
     tasks = ["task1_bug_triage", "task2_sprint_planning", "task3_quarterly_roadmap"] if not args.task else [args.task]
     scores = {}
