@@ -6,7 +6,7 @@ Runs an LLM agent against all 3 tasks and reports baseline scores.
 Required environment variables:
   API_BASE_URL       — OpenAI-compatible API base URL
   MODEL_NAME         — Model identifier for inference
-  OPENROUTER_API_KEY — Hugging Face / API token (used as the API key)
+  HF_TOKEN           — Hugging Face / API token (used as the API key)
 
 Optional:
   PM_ENV_URL    — URL of the running PM Simulator API (default: http://localhost:7860)
@@ -37,7 +37,7 @@ PM_ENV_URL = os.environ.get("PM_ENV_URL", "http://localhost:7860")
 MAX_STEPS = 5  # safety cap per episode
 TEMPERATURE = 0.2
 
-client = OpenAI(base_url=API_BASE_URL, api_key=os.environ["OPENROUTER_API_KEY"])
+client = OpenAI(base_url=API_BASE_URL, api_key=os.environ["HF_TOKEN"])
 
 # ──────────────────────────────────────────────────────────────────────────────
 # System prompt
@@ -306,7 +306,7 @@ def main():
     print(f"  Model:     {MODEL_NAME}")
     print(f"  Env URL:   {PM_ENV_URL}")
 
-    if not os.environ['OPENROUTER_API_KEY']:
+    if not os.environ['HF_TOKEN']:
         print("  [WARNING] API TOKEN not set. API calls may fail.")
 
     # Check environment is up
